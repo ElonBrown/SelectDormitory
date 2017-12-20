@@ -113,6 +113,10 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
 
         mLoginFormView = findViewById(R.id.login_form);
         mProgressView = findViewById(R.id.login_progress);
+
+        Intent getIntent = getIntent();
+        String loginErr = getIntent.getStringExtra("loginErr");
+        mEmailView.setError(loginErr);
     }
 
     private void populateAutoComplete() {
@@ -174,7 +178,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
         mPasswordView.setError(null);
 
         // Store values at the time of the login attempt.
-        final String email = mEmailView.getText().toString();
+        final String stuId = mEmailView.getText().toString();
         String password = mPasswordView.getText().toString();
 
         boolean cancel = false;
@@ -183,12 +187,12 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
         // Check for a valid password, if the user entered one.
 
 
-        // Check for a valid email address.
-        if (TextUtils.isEmpty(email)) {
+        // Check for a valid stuId address.
+        if (TextUtils.isEmpty(stuId)) {
             mEmailView.setError(getString(R.string.error_field_required));
             focusView = mEmailView;
             cancel = true;
-        } else if (!isEmailValid(email)) {
+        } else if (!isEmailValid(stuId)) {
             mEmailView.setError(getString(R.string.error_invalid_email));
             focusView = mEmailView;
             cancel = true;
@@ -196,7 +200,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
             mPasswordView.setError(getString(R.string.error_invalid_password));
             focusView = mPasswordView;
             cancel = true;
-        }else if (!isEqualValid(email, password)) {
+        } else if (!isEqualValid(stuId, password)) {
             mPasswordView.setError("验证未通过，请重新输入");
             mPasswordView.setText("");
             focusView = mPasswordView;
@@ -210,8 +214,17 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
         } else {
             // Show a progress spinner, and kick off a background task to
             // perform the user login attempt.
+//            SharedPreferences sharedPreferences = getSharedPreferences("info", MODE_PRIVATE);
+//            SharedPreferences.Editor editor = sharedPreferences.edit();
+//            editor.putString("StuId", stuId);
+//            editor.commit();
+            Intent intent = new Intent();
+            intent.putExtra("stuId", stuId);                              //返回选择的cityCode
+            setResult(RESULT_OK, intent);
+//            finish();
+
             showProgress(true);
-            mAuthTask = new UserLoginTask(email, password);
+            mAuthTask = new UserLoginTask(stuId, password);
             mAuthTask.execute((Void) null);
         }
     }
@@ -226,9 +239,10 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
         return password.length() > 4;
     }
 
-    private boolean isEqualValid(String email,String password){
+    private boolean isEqualValid(String email, String password) {
         return email.equals(password);
     }
+
 
     /**
      * Shows the progress UI and hides the login form.

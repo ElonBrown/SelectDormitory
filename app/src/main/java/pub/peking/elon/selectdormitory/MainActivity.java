@@ -17,10 +17,10 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.ListView;
+import android.widget.SimpleAdapter;
 import android.widget.TextView;
-import android.widget.Toast;
 
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -31,6 +31,7 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
+import java.util.List;
 
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.HttpsURLConnection;
@@ -49,7 +50,7 @@ public class MainActivity extends AppCompatActivity
         public void handleMessage(android.os.Message msg) {
             switch (msg.what) {
                 case UPDATE_STUDENT_INFORMATION:
-//                    updateStuInfo((Student) msg.obj);
+                    updateStuInfo((Student) msg.obj);
                     break;
                 default:
                     break;
@@ -57,6 +58,19 @@ public class MainActivity extends AppCompatActivity
         }
 
     };
+
+    private void updateStuInfo(Student stuInfo) {
+
+        ListView mListView = (ListView) findViewById(R.id.list_view);
+        List stuList = stuInfo.toList();
+        SimpleAdapter adapter = new SimpleAdapter(this, stuList,
+                R.layout.simple__list_item,
+                new String[]{"title", "info"},
+                new int[]{R.id.text1,
+                        R.id.text2,
+                });
+        mListView.setAdapter(adapter);
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -84,6 +98,7 @@ public class MainActivity extends AppCompatActivity
         navigationView.setNavigationItemSelectedListener(this);
 
         initView();
+        getStuInfo(stuId);
     }
 
     private void initView() {
@@ -94,6 +109,8 @@ public class MainActivity extends AppCompatActivity
         View headerView = navigationView.getHeaderView(0);
         TextView tvStuId = (TextView) headerView.findViewById(R.id.tvStuId);
         tvStuId.setText(stuId);
+
+
     }
 
     private void getStuInfo(String stuId) {
@@ -163,7 +180,7 @@ public class MainActivity extends AppCompatActivity
             JSONObject data = jsonObject.getJSONObject("data");
             if (!jsonObject.getString("errcode").toString().equals("0")) {
                 String errmsg = data.getString("errmsg");
-                Log.d("myApp",errmsg);
+                Log.d("myApp", errmsg);
                 Intent intent = new Intent(this, LoginActivity.class);
                 intent.putExtra("loginErr", errmsg);
                 startActivityForResult(intent, 1);
@@ -173,8 +190,13 @@ public class MainActivity extends AppCompatActivity
                 stuInfo.setName(data.getString("name"));
                 stuInfo.setGender(data.getString("gender"));
                 stuInfo.setVcode(data.getString("vcode"));
-                stuInfo.setRoom(data.getString("room"));
-                stuInfo.setBuilding(data.getString("building"));
+                if (!data.isNull("room")) {
+                    stuInfo.setRoom(data.getString("room"));
+                    stuInfo.setBuilding(data.getString("building"));
+                } else {
+                    stuInfo.setRoom("您还未选宿舍");
+                    stuInfo.setBuilding("点击在线选择宿舍");
+                }
                 stuInfo.setLocation(data.getString("location"));
                 stuInfo.setGrade(data.getString("grade"));
             }
@@ -265,9 +287,9 @@ public class MainActivity extends AppCompatActivity
         } else if (id == R.id.nav_slideshow) {
 
         } else if (id == R.id.nav_manage) {
-
+            getStuInfo(stuId);
         } else if (id == R.id.nav_share) {
-
+            finish();
         } else if (id == R.id.nav_send) {
             Intent intent = new Intent(this, LoginActivity.class);                 //新建Intent交互通信
             startActivityForResult(intent, 1);                                        //开启一个Activity并返回值

@@ -10,7 +10,7 @@
     <!-- Strings related to login -->
     <string name="prompt_email">学号</string>
     <string name="prompt_password">密码 (首次密码与学号相同)</string>
-    <string name="action_sign_in">登录 or 注册</string>
+    <string name="action_sign_in">点 击 登 录</string>
     <string name="action_sign_in_short">Sign in</string>
     <string name="error_invalid_email">请输入正确学号</string>
     <string name="error_invalid_password">This password is too short</string>

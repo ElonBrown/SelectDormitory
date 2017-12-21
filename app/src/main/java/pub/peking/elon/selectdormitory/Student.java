@@ -1,5 +1,10 @@
 package pub.peking.elon.selectdormitory;
 
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+
 public class Student {
     private String id;
     private String name;
@@ -9,6 +14,45 @@ public class Student {
     private String building;
     private String location;
     private String grade;
+
+    public List<Map<String, String>> toList() {
+        List<Map<String, String>> list = new ArrayList<Map<String, String>>();
+
+        Map<String, String> map = new LinkedHashMap<String, String>();
+        map.put("title", "学号");
+        map.put("info", id);
+        list.add(map);
+        map = new LinkedHashMap<String, String>();
+        map.put("title", "姓名");
+        map.put("info", name);
+        list.add(map);
+        map = new LinkedHashMap<String, String>();
+        map.put("title", "性别");
+        map.put("info", gender);
+        list.add(map);
+        map = new LinkedHashMap<String, String>();
+        map.put("title", "验证码");
+        map.put("info", vcode);
+        list.add(map);
+        map = new LinkedHashMap<String, String>();
+        map.put("title", "房间号");
+        map.put("info", room);
+        list.add(map);
+        map = new LinkedHashMap<String, String>();
+        map.put("title", "楼号");
+        map.put("info", building);
+        list.add(map);
+        map = new LinkedHashMap<String, String>();
+        map.put("title", "校区");
+        map.put("info", location);
+        list.add(map);
+        map = new LinkedHashMap<String, String>();
+        map.put("title", "年级");
+        map.put("info", grade);
+        list.add(map);
+
+        return list;
+    }
 
     public String getId() {
         return id;

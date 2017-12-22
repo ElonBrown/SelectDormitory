@@ -17,9 +17,11 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.SimpleAdapter;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -31,7 +33,9 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.HttpsURLConnection;
@@ -44,13 +48,16 @@ public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
 
     private static final int UPDATE_STUDENT_INFORMATION = 1;
+    private static final int UPDATE_DORMITORY_INFORMATION = 2;
     private String stuId;
+    private Integer dor_gender = 1;
 
     private Handler mHandler = new Handler() {
         public void handleMessage(android.os.Message msg) {
             switch (msg.what) {
                 case UPDATE_STUDENT_INFORMATION:
-                    updateStuInfo((Student) msg.obj);
+                case UPDATE_DORMITORY_INFORMATION:
+                    updateInfo((List) msg.obj);
                     break;
                 default:
                     break;
@@ -59,17 +66,39 @@ public class MainActivity extends AppCompatActivity
 
     };
 
-    private void updateStuInfo(Student stuInfo) {
-
-        ListView mListView = (ListView) findViewById(R.id.list_view);
-        List stuList = stuInfo.toList();
-        SimpleAdapter adapter = new SimpleAdapter(this, stuList,
+    private void updateInfo(final List list) {
+        ListView listView = (ListView) findViewById(R.id.list_view);
+        SimpleAdapter adapter = new SimpleAdapter(this, list,
                 R.layout.simple__list_item,
                 new String[]{"title", "info"},
                 new int[]{R.id.text1,
                         R.id.text2,
                 });
-        mListView.setAdapter(adapter);
+        listView.setAdapter(adapter);
+        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {      //处理点击事件
+                Log.d("Select", "您单击了：" + position);
+                Map dorInfo = (Map) list.get(position);
+                Integer dorNum = (Integer) dorInfo.get("info");
+                Log.d("myApp", dorNum.toString());
+                if (dorNum == 0) {
+                    Toast.makeText(getApplicationContext(), "床位不足，请选择其他宿舍楼", Toast.LENGTH_SHORT).show();
+                } else {
+                    ArrayList<Integer> put = new ArrayList<Integer>();
+                    put.add(position);
+                    for (int i = 0;i<list.size();i++) {
+                        if(i==position) continue;
+                        dorInfo = (Map) list.get(i);
+                        dorNum = (Integer) dorInfo.get("info");
+                        if (dorNum != 0){
+                            put.add(i);
+                        }
+                    }
+                    SelectActivity.actionStart(MainActivity.this, put);
+                }
+            }
+        });
     }
 
     @Override
@@ -109,8 +138,6 @@ public class MainActivity extends AppCompatActivity
         View headerView = navigationView.getHeaderView(0);
         TextView tvStuId = (TextView) headerView.findViewById(R.id.tvStuId);
         tvStuId.setText(stuId);
-
-
     }
 
     private void getStuInfo(String stuId) {
@@ -118,23 +145,51 @@ public class MainActivity extends AppCompatActivity
         new Thread(new Runnable() {
             @Override
             public void run() {
-                Student stuInfo = queryUrl(address);
-                Log.d("myApp", stuInfo.toString());
-                if (stuInfo != null) {
-                    Message msg = new Message();
-                    msg.what = UPDATE_STUDENT_INFORMATION;
-                    msg.obj = stuInfo;
-                    mHandler.sendMessage(msg);
+                try {
+                    String responseStr = queryUrl(address);
+                    Student stuInfo = parseStu(responseStr);
+                    Log.d("myApp", stuInfo.toString());
+                    List stuList = stuInfo.toList();
+                    if (stuInfo != null) {
+                        Message msg = new Message();
+                        msg.what = UPDATE_STUDENT_INFORMATION;
+                        msg.obj = stuList;
+                        mHandler.sendMessage(msg);
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
                 }
             }
         }).start();
     }
 
+    private void getDorInfo(Integer dor_gender) {
+        final String address = "https://api.mysspku.com/index.php/V1/MobileCourse/getRoom?gender=" + dor_gender.toString();
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    String responseStr = queryUrl(address);
+                    Dormitory dorInfo = parseDor(responseStr);
+                    Log.d("myApp", dorInfo.toString());
+                    List dorList = dorInfo.toList();
+                    if (dorInfo != null) {
+                        Message msg = new Message();
+                        msg.what = UPDATE_DORMITORY_INFORMATION;
+                        msg.obj = dorList;
+                        mHandler.sendMessage(msg);
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        }).start();
+    }
 
-    public Student queryUrl(final String address) {
+    public String queryUrl(final String address) {
         Log.d("myAppUrl", address);
         HttpURLConnection con = null;
-        Student stuInfo = new Student();
+        String responseStr = new String();
         try {
             URL url = new URL(address);
             //ignore https certificate validation | 忽略 https 证书验证
@@ -158,22 +213,20 @@ public class MainActivity extends AppCompatActivity
             while ((str = reader.readLine()) != null) {
                 response.append(str);
             }
-            String responseStr = response.toString();
+            responseStr = response.toString();
             Log.d("myAppURL", responseStr);
-
-            stuInfo = parseJson(responseStr);
-
         } catch (Exception e) {
+            Toast.makeText(getApplicationContext(), "网络开小差啦，请稍后再试", Toast.LENGTH_SHORT).show();
             e.printStackTrace();
         } finally {
             if (con != null) {
                 con.disconnect();
             }
         }
-        return stuInfo;
+        return responseStr;
     }
 
-    private Student parseJson(String jsonStr) {
+    private Student parseStu(String jsonStr) {
         Student stuInfo = new Student();
         try {
             JSONObject jsonObject = new JSONObject(jsonStr);
@@ -189,6 +242,11 @@ public class MainActivity extends AppCompatActivity
                 stuInfo.setId(data.getString("studentid"));
                 stuInfo.setName(data.getString("name"));
                 stuInfo.setGender(data.getString("gender"));
+                if (data.getString("gender").toString().equals("男")) {
+                    dor_gender = 1;
+                } else {
+                    dor_gender = 2;
+                }
                 stuInfo.setVcode(data.getString("vcode"));
                 if (!data.isNull("room")) {
                     stuInfo.setRoom(data.getString("room"));
@@ -204,6 +262,30 @@ public class MainActivity extends AppCompatActivity
             e.printStackTrace();
         }
         return stuInfo;
+    }
+
+    private Dormitory parseDor(String jsonStr) {
+        Dormitory dorInfo = new Dormitory();
+        try {
+            JSONObject jsonObject = new JSONObject(jsonStr);
+            JSONObject data = jsonObject.getJSONObject("data");
+            if (!jsonObject.getString("errcode").toString().equals("0")) {
+                String errmsg = data.getString("errmsg");
+                Log.d("myApp", errmsg);
+                Intent intent = new Intent(this, LoginActivity.class);
+                intent.putExtra("loginErr", errmsg);
+                startActivityForResult(intent, 1);
+            } else {
+                dorInfo.setInteger1(data.getInt("5"));
+                dorInfo.setInteger2(data.getInt("13"));
+                dorInfo.setInteger3(data.getInt("14"));
+                dorInfo.setInteger4(data.getInt("8"));
+                dorInfo.setInteger5(data.getInt("9"));
+            }
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+        return dorInfo;
     }
 
     public static void trustAllHosts() {
@@ -283,7 +365,7 @@ public class MainActivity extends AppCompatActivity
         if (id == R.id.nav_camera) {
             // Handle the camera action
         } else if (id == R.id.nav_gallery) {
-
+            getDorInfo(dor_gender);
         } else if (id == R.id.nav_slideshow) {
 
         } else if (id == R.id.nav_manage) {
@@ -300,7 +382,7 @@ public class MainActivity extends AppCompatActivity
         return true;
     }
 
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {                 //记录新的信息
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {                 //记录新信息
         if (requestCode == 1 && resultCode == RESULT_OK) {
             stuId = data.getStringExtra("stuId");
             SharedPreferences sharedPreferences = getSharedPreferences("info", MODE_PRIVATE);

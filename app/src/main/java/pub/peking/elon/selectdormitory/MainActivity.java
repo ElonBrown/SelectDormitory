@@ -51,13 +51,15 @@ public class MainActivity extends AppCompatActivity
     private static final int UPDATE_DORMITORY_INFORMATION = 2;
     private String stuId;
     private Integer dor_gender = 1;
+    private Boolean isSelectedDormitory = false;
 
     private Handler mHandler = new Handler() {
         public void handleMessage(android.os.Message msg) {
             switch (msg.what) {
                 case UPDATE_STUDENT_INFORMATION:
+                    initView();
                 case UPDATE_DORMITORY_INFORMATION:
-                    updateInfo((List) msg.obj);
+                    updateInfo((List) msg.obj, msg.what);
                     break;
                 default:
                     break;
@@ -66,7 +68,7 @@ public class MainActivity extends AppCompatActivity
 
     };
 
-    private void updateInfo(final List list) {
+    private void updateInfo(final List list, final Integer p) {
         ListView listView = (ListView) findViewById(R.id.list_view);
         SimpleAdapter adapter = new SimpleAdapter(this, list,
                 R.layout.simple__list_item,
@@ -79,6 +81,7 @@ public class MainActivity extends AppCompatActivity
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {      //处理点击事件
                 Log.d("Select", "您单击了：" + position);
+                if (p == UPDATE_STUDENT_INFORMATION) return;
                 Map dorInfo = (Map) list.get(position);
                 Integer dorNum = (Integer) dorInfo.get("info");
                 Log.d("myApp", dorNum.toString());
@@ -87,15 +90,16 @@ public class MainActivity extends AppCompatActivity
                 } else {
                     ArrayList<Integer> put = new ArrayList<Integer>();
                     put.add(position);
-                    for (int i = 0;i<list.size();i++) {
-                        if(i==position) continue;
+                    for (int i = 0; i < list.size(); i++) {
+                        if (i == position) continue;
                         dorInfo = (Map) list.get(i);
                         dorNum = (Integer) dorInfo.get("info");
-                        if (dorNum != 0){
+                        if (dorNum != 0) {
                             put.add(i);
                         }
                     }
                     SelectActivity.actionStart(MainActivity.this, put);
+                    getStuInfo(stuId);
                 }
             }
         });
@@ -126,6 +130,12 @@ public class MainActivity extends AppCompatActivity
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
 
+        findViewById(R.id.fab).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                getDorInfo(dor_gender);
+            }
+        });
         initView();
         getStuInfo(stuId);
     }
@@ -138,6 +148,16 @@ public class MainActivity extends AppCompatActivity
         View headerView = navigationView.getHeaderView(0);
         TextView tvStuId = (TextView) headerView.findViewById(R.id.tvStuId);
         tvStuId.setText(stuId);
+
+        if (isSelectedDormitory) {
+            findViewById(R.id.fab).setVisibility(View.GONE);
+            navigationView.getMenu().findItem(R.id.nav_gallery).setVisible(false);
+            navigationView.getMenu().findItem(R.id.nav_slideshow).setVisible(false);
+        } else {
+            findViewById(R.id.fab).setVisibility(View.VISIBLE);
+            navigationView.getMenu().findItem(R.id.nav_gallery).setVisible(true);
+            navigationView.getMenu().findItem(R.id.nav_slideshow).setVisible(true);
+        }
     }
 
     private void getStuInfo(String stuId) {
@@ -184,6 +204,10 @@ public class MainActivity extends AppCompatActivity
                 }
             }
         }).start();
+    }
+
+    private void putSelectActivity(Integer dor_gender) {
+        getDorInfo(dor_gender);
     }
 
     public String queryUrl(final String address) {
@@ -249,11 +273,13 @@ public class MainActivity extends AppCompatActivity
                 }
                 stuInfo.setVcode(data.getString("vcode"));
                 if (!data.isNull("room")) {
+                    isSelectedDormitory = true;
                     stuInfo.setRoom(data.getString("room"));
                     stuInfo.setBuilding(data.getString("building"));
                 } else {
+                    isSelectedDormitory = false;
                     stuInfo.setRoom("您还未选宿舍");
-                    stuInfo.setBuilding("点击在线选择宿舍");
+                    stuInfo.setBuilding("点击右下角图标 选择宿舍");
                 }
                 stuInfo.setLocation(data.getString("location"));
                 stuInfo.setGrade(data.getString("grade"));
@@ -367,7 +393,7 @@ public class MainActivity extends AppCompatActivity
         } else if (id == R.id.nav_gallery) {
             getDorInfo(dor_gender);
         } else if (id == R.id.nav_slideshow) {
-
+            putSelectActivity(dor_gender);
         } else if (id == R.id.nav_manage) {
             getStuInfo(stuId);
         } else if (id == R.id.nav_share) {

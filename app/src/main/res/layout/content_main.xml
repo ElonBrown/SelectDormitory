@@ -15,13 +15,11 @@
         <ListView
             android:id="@+id/list_view"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content" />
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:layout_marginBottom="20dp"
+            android:background="@drawable/shape_corner"/>
 
-        <View
-            android:layout_width="fill_parent"
-            android:layout_height="1dp"
-            android:layout_below="@id/list_view"
-            android:background="#25000000" />
     </RelativeLayout>
 
 </android.support.constraint.ConstraintLayout>

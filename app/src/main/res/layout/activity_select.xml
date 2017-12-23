@@ -7,8 +7,8 @@
     <RelativeLayout
         android:id="@+id/title"
         android:layout_width="fill_parent"
-        android:layout_height="45.0dip"
-        android:background="#ffcd2626">
+        android:layout_height="50.0dip"
+        android:background="@color/colorPrimary">
 
         <TextView
             android:id="@+id/title_name"
@@ -33,7 +33,7 @@
             android:layout_centerVertical="true"
             android:layout_gravity="center"
             android:layout_toRightOf="@id/title_back"
-            android:background="#A71717"
+            android:background="@color/colorPrimaryDark"
             android:gravity="center" />
     </RelativeLayout>
 
@@ -102,7 +102,7 @@
             android:layout_height="wrap_content"
             android:gravity="right"
             android:text="添加同住人？"
-            android:textColor="#9900ff00"/>
+            android:textColor="@color/colorPrimary" />
     </LinearLayout>
 
 
@@ -115,7 +115,9 @@
             android:id="@+id/btn_select"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="确认 and 提交" />
+            android:background="@color/colorPrimary"
+            android:text="确认 and 提交"
+            android:textColor="#ffffff" />
 
     </LinearLayout>
 

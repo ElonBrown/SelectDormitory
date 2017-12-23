@@ -1,5 +1,6 @@
 package pub.peking.elon.selectdormitory;
 
+import android.app.AlertDialog;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
@@ -207,7 +208,31 @@ public class MainActivity extends AppCompatActivity
     }
 
     private void putSelectActivity(Integer dor_gender) {
-        getDorInfo(dor_gender);
+        final String address = "https://api.mysspku.com/index.php/V1/MobileCourse/getRoom?gender=" + dor_gender.toString();
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    String responseStr = queryUrl(address);
+                    Dormitory dorInfo = parseDor(responseStr);
+                    Log.d("myApp", dorInfo.toString());
+                    List list = dorInfo.toList();
+                    ArrayList<Integer> put = new ArrayList<>();
+                    for (int i = 0; i < list.size(); i++) {
+                        Map dorInfoMap = (Map) list.get(i);
+                        Integer dorNum = (Integer) dorInfoMap.get("info");
+                        if (dorNum != 0) {
+                            put.add(i);
+                        }
+                    }
+                    SelectActivity.actionStart(MainActivity.this, put);
+                    getStuInfo(stuId);
+
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        }).start();
     }
 
     public String queryUrl(final String address) {
@@ -389,7 +414,7 @@ public class MainActivity extends AppCompatActivity
         int id = item.getItemId();
 
         if (id == R.id.nav_camera) {
-            // Handle the camera action
+            customAlert();
         } else if (id == R.id.nav_gallery) {
             getDorInfo(dor_gender);
         } else if (id == R.id.nav_slideshow) {
@@ -419,5 +444,11 @@ public class MainActivity extends AppCompatActivity
             initView();
             getStuInfo(stuId);
         }
+    }
+
+    private void customAlert() {
+        new AlertDialog.Builder(MainActivity.this)
+                .setMessage("APP用于新生预先选择宿舍，每人只能选择一次！与他人一起选择，将会分到同一宿舍")//设置显示的内容
+                .show();//在按键响应事件中显示此对话框
     }
 }

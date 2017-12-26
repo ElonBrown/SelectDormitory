@@ -3,8 +3,12 @@
 
 ![image](https://github.com/ElonBrown/SelectDormitory/blob/master/image/running.gif)
 
-![image](https://github.com/ElonBrown/SelectDormitory/blob/master/image/Screenshot_1514269536.png)
-![image](https://github.com/ElonBrown/SelectDormitory/blob/master/image/Screenshot_1514269490.png)
+<figure class="half">
+    <img src="https://github.com/ElonBrown/SelectDormitory/blob/master/image/Screenshot_1514269536.png" width="400">
+    <img src="https://github.com/ElonBrown/SelectDormitory/blob/master/image/Screenshot_1514269490.png" width="400">
+</figure>
 
-![image](https://github.com/ElonBrown/SelectDormitory/blob/master/image/Screenshot_1514355736.png)
-![image](https://github.com/ElonBrown/SelectDormitory/blob/master/image/Screenshot_1514269592.png)
+<figure class="half">
+    <img src="https://github.com/ElonBrown/SelectDormitory/blob/master/image/Screenshot_1514355736.png" width="400">
+    <img src="https://github.com/ElonBrown/SelectDormitory/blob/master/image/Screenshot_1514269592.png" width="400">
+</figure>
